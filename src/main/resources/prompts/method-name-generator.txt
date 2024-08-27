@@ -1,0 +1,1 @@
+Provide five alternative names for a given function or method body. Your response should be a list of names, separated by commas, without any extra information.

@@ -1,0 +1,186 @@
+<idea-plugin>
+    <id>ee.carlrobert.chatgpt</id>
+    <name>CodeGPT</name>
+    <vendor email="carlrobertoh@gmail.com" url="https://carlrobert.ee">Carl-Robert Linnupuu</vendor>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+    <depends optional="true" config-file="plugin-java.xml">com.intellij.modules.java</depends>
+    <depends optional="true" config-file="plugin-python.xml">com.intellij.modules.python</depends>
+<!--    TODO-->
+<!--    <depends optional="true" config-file="plugin-js.xml">JavaScript</depends>-->
+<!--    <depends optional="true" config-file="plugin-go.xml">org.jetbrains.plugins.go</depends>-->
+<!--    <depends optional="true" config-file="plugin-ruby.xml">com.intellij.modules.ruby</depends>-->
+<!--    <depends optional="true" config-file="plugin-php.xml">com.jetbrains.php</depends>-->
+<!--    <depends optional="true" config-file="plugin-swift.xml">com.intellij.swift</depends>-->
+    <depends optional="true">Git4Idea</depends>
+
+    <projectListeners>
+        <listener topic="com.intellij.codeInsight.lookup.LookupManagerListener"
+                  class="ee.carlrobert.codegpt.completions.MethodNameLookupListener"/>
+        <listener topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"
+                  class="ee.carlrobert.codegpt.toolwindow.chat.ChatToolWindowListener"/>
+    </projectListeners>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="ee.carlrobert.codegpt.CodeGPTProjectActivity"/>
+        <postStartupActivity implementation="ee.carlrobert.codegpt.CodeGPTUpdateActivity"/>
+        <applicationConfigurable id="settings.codegpt" parentId="tools" displayName="CodeGPT"
+            instance="ee.carlrobert.codegpt.settings.GeneralSettingsConfigurable"/>
+        <applicationConfigurable id="settings.codegpt.services" parentId="settings.codegpt" displayName="Providers"
+          instance="ee.carlrobert.codegpt.settings.service.ServiceConfigurable"/>
+        <applicationConfigurable id="settings.codegpt.services.codegpt" parentId="settings.codegpt.services" displayName="CodeGPT"
+          instance="ee.carlrobert.codegpt.settings.service.codegpt.CodeGPTServiceConfigurable"/>
+        <applicationConfigurable id="settings.codegpt.services.openai" parentId="settings.codegpt.services" displayName="OpenAI"
+          instance="ee.carlrobert.codegpt.settings.service.OpenAIServiceConfigurable"/>
+        <applicationConfigurable id="settings.codegpt.services.custom" parentId="settings.codegpt.services" displayName="Custom OpenAI"
+          instance="ee.carlrobert.codegpt.settings.service.custom.CustomServiceConfigurable"/>
+        <applicationConfigurable id="settings.codegpt.services.azure" parentId="settings.codegpt.services" displayName="Azure"
+          instance="ee.carlrobert.codegpt.settings.service.AzureServiceConfigurable"/>
+        <applicationConfigurable id="settings.codegpt.services.anthropic" parentId="settings.codegpt.services" displayName="Anthropic"
+          instance="ee.carlrobert.codegpt.settings.service.AnthropicServiceConfigurable"/>
+        <applicationConfigurable id="settings.codegpt.services.google" parentId="settings.codegpt.services" displayName="Google"
+          instance="ee.carlrobert.codegpt.settings.service.google.GoogleSettingsConfigurable"/>
+        <applicationConfigurable id="settings.codegpt.services.llama_cpp" parentId="settings.codegpt.services" displayName="LLaMA C/C++ (Local)"
+          instance="ee.carlrobert.codegpt.settings.service.LlamaServiceConfigurable"/>
+        <applicationConfigurable id="settings.codegpt.services.ollama" parentId="settings.codegpt.services" displayName="Ollama (Local)"
+          instance="ee.carlrobert.codegpt.settings.service.ollama.OllamaSettingsConfigurable"/>
+        <applicationConfigurable id="settings.codegpt.personas" parentId="settings.codegpt" displayName="Personas"
+          instance="ee.carlrobert.codegpt.settings.persona.PersonasConfigurable"/>
+        <applicationConfigurable id="settings.codegpt.dcoumentations" parentId="settings.codegpt" displayName="Documentations"
+          instance="ee.carlrobert.codegpt.settings.documentation.DocumentationsConfigurable"/>
+        <applicationConfigurable id="settings.codegpt.configuration" parentId="settings.codegpt" displayName="Configuration"
+            instance="ee.carlrobert.codegpt.settings.configuration.ConfigurationConfigurable"/>
+        <applicationConfigurable id="settings.codegpt.advanced" parentId="settings.codegpt" displayName="Advanced Settings"
+            instance="ee.carlrobert.codegpt.settings.advanced.AdvancedSettingsConfigurable"/>
+        <applicationConfigurable
+          parentId="settings.codegpt"
+          instance="ee.carlrobert.codegpt.telemetry.ui.preferences.TelemetryConfigurable"
+          id="tools.preferences.codegpt.telemetry"
+          displayName="Telemetry"/>
+        <applicationService
+          serviceImplementation="ee.carlrobert.codegpt.telemetry.core.service.TelemetryServiceFactory"/>
+        <applicationService serviceImplementation="ee.carlrobert.codegpt.settings.GeneralSettings"/>
+        <applicationService serviceImplementation="ee.carlrobert.codegpt.settings.service.azure.AzureSettings"/>
+        <applicationService serviceImplementation="ee.carlrobert.codegpt.settings.service.anthropic.AnthropicSettings"/>
+        <applicationService serviceImplementation="ee.carlrobert.codegpt.settings.service.openai.OpenAISettings"/>
+        <applicationService serviceImplementation="ee.carlrobert.codegpt.settings.service.you.YouSettings"/>
+        <applicationService serviceImplementation="ee.carlrobert.codegpt.settings.service.llama.LlamaSettings"/>
+        <applicationService serviceImplementation="ee.carlrobert.codegpt.settings.service.ollama.OllamaSettings"/>
+        <applicationService serviceImplementation="ee.carlrobert.codegpt.settings.IncludedFilesSettings"/>
+        <applicationService serviceImplementation="ee.carlrobert.codegpt.settings.advanced.AdvancedSettings"/>
+        <applicationService serviceImplementation="ee.carlrobert.codegpt.conversations.ConversationsState"/>
+        <applicationService serviceImplementation="ee.carlrobert.codegpt.codecompletions.psi.CompletionContextService"/>
+        <inline.completion.provider
+          id="CodeGPTInlineCompletionProvider"
+          implementation="ee.carlrobert.codegpt.codecompletions.CodeGPTInlineCompletionProvider"/>
+        <toolWindow id="CodeGPT" icon="ee.carlrobert.codegpt.Icons.DefaultSmall" anchor="right"
+            factoryClass="ee.carlrobert.codegpt.toolwindow.ProjectToolWindowFactory"/>
+        <notificationGroup id="CodeGPT Notification Group" displayType="BALLOON" key="notification.group.name"/>
+        <notificationGroup id="CodeGPT Notification Group Sticky" displayType="STICKY_BALLOON" key="notification.group.sticky.name"/>
+        <statusBarWidgetFactory order="first" id="ee.carlrobert.codegpt.statusbar.widget"
+          implementation="ee.carlrobert.codegpt.statusbar.CodeGPTStatusBarWidgetFactory"/>
+    </extensions>
+
+    <resource-bundle>messages.codegpt</resource-bundle>
+
+    <actions>
+        <group id="CodeGPTEditorPopup">
+            <group id="action.editor.group.EditorActionGroup"
+                text="CodeGPT"
+                class="com.intellij.openapi.actionSystem.DefaultActionGroup"
+                popup="true"
+                icon="ee.carlrobert.codegpt.Icons.DefaultSmall">
+            </group>
+            <add-to-group group-id="EditorPopupMenu1" anchor="first"/>
+            <separator/>
+        </group>
+        <action id="CodeGPT.TriggerEditorPopup"
+          class="ee.carlrobert.codegpt.actions.editor.ShowEditorActionGroupAction"
+          text="Show CodeGPT Actions">
+            <keyboard-shortcut first-keystroke="ctrl shift alt m" keymap="$default"/>
+        </action>
+        <group id="CodeGPT.ProjectViewPopupMenuRootGroup">
+            <group id="CodeGPT.ProjectViewPopupMenuGroup"
+              text="CodeGPT"
+              class="com.intellij.openapi.actionSystem.DefaultActionGroup"
+              popup="true"
+              icon="ee.carlrobert.codegpt.Icons.DefaultSmall">
+                <action
+                  id="CodeGPT.IncludeFilesInContextAction"
+                  class="ee.carlrobert.codegpt.actions.IncludeFilesInContextAction" />
+            </group>
+            <add-to-group
+              group-id="ProjectViewPopupMenu"
+              relative-to-action="ProjectViewPopupMenuRefactoringGroup"
+              anchor="before"/>
+            <separator/>
+        </group>
+
+        <group id="CodeGPT.FloatingCodeToolbarMenuRootGroup">
+            <action
+              id="CodeGPT.ModifySelectionAction"
+              class="ee.carlrobert.codegpt.actions.editor.EditCodeAction" />
+            <add-to-group
+              group-id="Floating.CodeToolbar"
+              relative-to-action="ProjectViewPopupMenuRefactoringGroup"
+              anchor="before"/>
+            <separator/>
+        </group>
+
+        <action
+          id="codegpt.openSettings"
+          text="Open Settings"
+          class="ee.carlrobert.codegpt.actions.OpenSettingsAction">
+            <override-text place="MainMenu" text="Open Settings"/>
+            <override-text place="popup" use-text-of-place="MainMenu"/>
+        </action>
+        <action
+          id="statusbar.enableCompletions"
+          class="ee.carlrobert.codegpt.actions.EnableCompletionsAction">
+            <keyboard-shortcut first-keystroke="ctrl shift alt c" keymap="$default"/>
+
+            <override-text place="MainMenu"/>
+            <override-text place="popup" use-text-of-place="MainMenu"/>
+        </action>
+        <action
+          id="statusbar.disableCompletions"
+          class="ee.carlrobert.codegpt.actions.DisableCompletionsAction">
+            <keyboard-shortcut first-keystroke="ctrl shift alt c" keymap="$default"/>
+
+            <override-text place="MainMenu"/>
+            <override-text place="popup" use-text-of-place="MainMenu"/>
+        </action>
+        <action
+          id="statusbar.startServer"
+          class="ee.carlrobert.codegpt.actions.StartServerAction">
+            <keyboard-shortcut first-keystroke="ctrl shift alt s" keymap="$default"/>
+
+            <override-text place="MainMenu"/>
+            <override-text place="popup" use-text-of-place="MainMenu"/>
+        </action>
+        <action
+          id="statusbar.stopServer"
+          class="ee.carlrobert.codegpt.actions.StopServerAction">
+            <keyboard-shortcut first-keystroke="ctrl shift alt s" keymap="$default"/>
+
+            <override-text place="MainMenu"/>
+            <override-text place="popup" use-text-of-place="MainMenu"/>
+        </action>
+
+        <group id="codegpt.statusBarPopup">
+            <reference id="codegpt.openSettings" />
+            <separator/>
+            <reference id="statusbar.stopServer" />
+            <reference id="statusbar.startServer" />
+            <reference id="statusbar.disableCompletions" />
+            <reference id="statusbar.enableCompletions" />
+        </group>
+
+        <group id="CodeGPT.GenerateGitCommitMessageGroup">
+            <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
+            <action
+              id="CodeGPT.GenerateGitCommitMessage"
+              class="ee.carlrobert.codegpt.actions.GenerateGitCommitMessageAction" />
+        </group>
+    </actions>
+</idea-plugin>
